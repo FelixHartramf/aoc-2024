@@ -1,4 +1,4 @@
-use std::iter::zip;
+use std::{collections::HashMap, iter::zip};
 
 use aoc_runner_derive::aoc;
 
@@ -21,16 +21,18 @@ pub fn part1(input: &str) -> u32 {
 #[aoc(day1, part2)]
 pub fn part2(input: &str) -> u32 {
     let mut left_nums: Vec<u32> = vec![];
-    let mut right_nums: Vec<u32> = vec![];
+    let mut right_nums: HashMap<u32, u32> = HashMap::new();
     for line in input.lines() {
         let num_str = line.split_ascii_whitespace().collect::<Vec<&str>>();
         left_nums.push(num_str[0].parse::<u32>().unwrap());
-        right_nums.push(num_str[1].parse::<u32>().unwrap());
+        
+        let right_num = num_str[1].parse::<u32>().unwrap();
+        right_nums.entry(right_num).and_modify(|counter| *counter += 1).or_insert(1);
     }
 
     left_nums
         .iter()
-        .map(|l| right_nums.iter().filter(|&r| r == l).count() as u32 * l)
+        .map(|l| right_nums.get(l).unwrap_or(&0) * l)
         .sum()
 }
 
