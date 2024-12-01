@@ -7,9 +7,9 @@ pub fn part1(input: &str) -> u32 {
     let mut left_nums: Vec<u32> = vec![];
     let mut right_nums: Vec<u32> = vec![];
     for line in input.lines() {
-        let num_str = line.split_ascii_whitespace().collect::<Vec<&str>>();
-        left_nums.push(num_str[0].parse::<u32>().unwrap());
-        right_nums.push(num_str[1].parse::<u32>().unwrap());
+        let mut num_str_iter = line.split_ascii_whitespace();
+        left_nums.push(num_str_iter.next().unwrap().parse::<u32>().unwrap());
+        right_nums.push(num_str_iter.next().unwrap().parse::<u32>().unwrap());
     }
 
     left_nums.sort();
@@ -21,12 +21,15 @@ pub fn part1(input: &str) -> u32 {
 #[aoc(day1, part2)]
 pub fn part2(input: &str) -> u32 {
     let mut left_nums: Vec<u32> = vec![];
+
+    // I tried using a let mut nums: HashMap<u32, (u32, u32)> but it was nearly 30% slower
     let mut right_nums: HashMap<u32, u32> = HashMap::new();
+    
     for line in input.lines() {
-        let num_str = line.split_ascii_whitespace().collect::<Vec<&str>>();
-        left_nums.push(num_str[0].parse::<u32>().unwrap());
+        let mut num_str_iter = line.split_ascii_whitespace();
+        left_nums.push(num_str_iter.next().unwrap().parse::<u32>().unwrap());        
         
-        let right_num = num_str[1].parse::<u32>().unwrap();
+        let right_num = num_str_iter.next().unwrap().parse::<u32>().unwrap();
         right_nums.entry(right_num).and_modify(|counter| *counter += 1).or_insert(1);
     }
 
