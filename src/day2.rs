@@ -39,15 +39,13 @@ pub fn part2(input: &str) -> u32 {
         let mut num_iter = line.split_whitespace().map(|s| s.parse::<u32>().unwrap());
         let first_num = num_iter.next().unwrap();
         let mut last_num = num_iter.next().unwrap();
-        let mut increasing = first_num < last_num;
 
         if first_num == last_num || first_num.abs_diff(last_num) > 3 {
             error = true;
-            last_num = first_num;
-            let new = num_iter.next().unwrap();
-            increasing = last_num < new;
-            last_num = new;
+            last_num = num_iter.next().unwrap();
         }
+
+        let increasing = first_num < last_num;
 
         for num in num_iter {
             if num == last_num 
