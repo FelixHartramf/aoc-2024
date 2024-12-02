@@ -1,7 +1,7 @@
 use aoc_runner_derive::aoc;
 
 #[aoc(day2, part1)]
-pub fn part1(input: &str) -> u32 {
+pub fn part1(input: &str) -> usize {
     let mut safe_reports = 0;
     'line_loop: for line in input.lines() {
         let mut num_iter = line.split_whitespace().map(|s| s.parse::<u32>().unwrap());
@@ -15,10 +15,11 @@ pub fn part1(input: &str) -> u32 {
         let increasing = first_num < last_num;
 
         for num in num_iter {
-            if num == last_num
+            if (!increasing && num > last_num)
+            || (increasing && num < last_num )
+            || num == last_num
             || num.abs_diff(last_num) > 3 
-            || (!increasing && num > last_num)
-            || (increasing && num < last_num ){
+             {
                 continue 'line_loop;
             }
 
@@ -48,10 +49,11 @@ pub fn part2(input: &str) -> u32 {
         let increasing = first_num < last_num;
 
         for num in num_iter {
-            if num == last_num 
-            || num.abs_diff(last_num) > 3
-            || (num > last_num && !increasing)
-            || (num < last_num && increasing ){
+            if (!increasing && num > last_num)
+            || (increasing && num < last_num )
+            || num == last_num
+            || num.abs_diff(last_num) > 3 
+             {
                 
                 if error {
                     continue 'line_loop;
@@ -76,7 +78,7 @@ mod tests {
     use std::fs;
 
     #[test]
-    fn sample1() {
+    fn part1_test() {
         assert_eq!(
             part1(
                 "7 6 4 2 1
@@ -87,11 +89,8 @@ mod tests {
 1 3 6 7 9"
             ),
             2
-        )
-    }
-
-    #[test]
-    fn real1() {
+        );
+        
         assert_eq!(
             part1(
                 &fs::read_to_string("input/2024/day2.txt")
@@ -102,7 +101,7 @@ mod tests {
     }
 
     #[test]
-    fn sample1_part2() {
+    fn part2_test() {
         assert_eq!(
             part2(
                 "7 6 4 2 1
@@ -113,11 +112,7 @@ mod tests {
 1 3 6 7 9"
             ),
             4
-        )
-    }
-
-    #[test]
-    fn real2() {
+        );
 
         assert_eq!(
             part2(
@@ -127,4 +122,5 @@ mod tests {
             455
         );
     }
+
 }

@@ -45,7 +45,7 @@ mod tests {
     use std::fs;
 
     #[test]
-    fn sample1() {
+    fn part1_test() {
         assert_eq!(
             part1(
                 "3   4
@@ -57,10 +57,7 @@ mod tests {
             ),
             11
         );
-    }
-
-    #[test]
-    fn real1() {
+        
         assert_eq!(
             part1(
                 &fs::read_to_string("input/2024/day1.txt")
@@ -71,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn sample1_part2() {
+    fn part2_test() {
         assert_eq!(
             part2(
                 "3   4
@@ -83,10 +80,7 @@ mod tests {
             ),
             31
         );
-    }
-
-    #[test]
-    fn real2() {
+        
         assert_eq!(
             part2(
                 &fs::read_to_string("input/2024/day1.txt")
