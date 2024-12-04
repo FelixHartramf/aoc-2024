@@ -1,5 +1,3 @@
-use std::isize;
-
 use aoc_runner_derive::aoc;
 
 #[aoc(day4, part1)]
@@ -86,33 +84,28 @@ pub fn part1(input: &str) -> u32 {
 
 #[aoc(day4, part2)]
 pub fn part2(input: &str) -> u32 {
-    let lines = input
-        .lines()
-        .collect::<Vec<&str>>()
-        .iter()
-        .map(|s| s.chars().collect::<Vec<char>>())
-        .collect::<Vec<Vec<char>>>();
-
+    let row_len = input.find('\n').unwrap() +1;
+    
+    let char_input = input.chars().collect::<Vec<char>>();
     let mut x_mas_count = 0;
-    for y in 1..lines.len()-1 {
-        for x in 1..lines[y].len()-1 {
-            if lines[y][x] != 'A' {
-                continue;
-            }
 
-            // It looks like only X-shape count and not +-shape
-            if ((lines[y+1][x+1] == 'S' && lines[y-1][x-1] == 'M')
-            || (lines[y+1][x+1] == 'M' && lines[y-1][x-1] == 'S'))
-            && ((lines[y-1][x+1] == 'S' && lines[y+1][x-1] == 'M')
-            || (lines[y-1][x+1] == 'M' && lines[y+1][x-1] == 'S'))
-            {
-                x_mas_count += 1;
-            }
-
+    for i in row_len+1..input.len()-row_len-1{
+        
+        if char_input[i] != 'A'{
+            continue;
+        }
+        
+        // It looks like only X-shape count and not +-shape
+        if ((char_input[i+row_len+1] == 'S' && char_input[i-row_len-1] == 'M')
+        || (char_input[i+row_len+1] == 'M' && char_input[i-row_len-1] == 'S'))
+        && ((char_input[i+row_len-1] == 'S' && char_input[i-row_len+1] == 'M')
+        || (char_input[i+row_len-1] == 'M' && char_input[i-row_len+1] == 'S'))
+        {
+            x_mas_count += 1;
         }
     }
-
     x_mas_count
+
 }
 
 #[cfg(test)]
