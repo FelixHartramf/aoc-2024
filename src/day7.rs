@@ -13,35 +13,29 @@ pub fn part1(input: &str) -> u64 {
             .map(|s| s.parse::<u64>().unwrap())
             .collect();
 
-        for i in 0..2_usize.pow(nums.len() as u32) {
-            // ToDo: schauen ob (plus bei allen ) größer als solution, dann keine solution
-            if correct(&nums, i, solution) {
-                sum += solution;
-                break;
-            }
+        if solvable(&nums, 0, solution, 0) {
+            dbg!(solution);
+            sum += solution;
         }
     }
 
     sum
 }
 
-#[inline]
-pub fn correct(nums: &Vec<u64>, operators: usize, wanted_solution: u64) -> bool {
-    let mut solution = nums[0];
-
-    for (i, num) in nums[1..].into_iter().enumerate() {
-        if (operators >> i) & 1 == 1 {
-            solution *= num;
-        } else {
-            solution += num;
-        }
-
-        if solution > wanted_solution {
-            return false;
-        }
+pub fn solvable(nums: &Vec<u64>, i: usize, wanted_solution: u64, current: u64) -> bool {
+    if nums.len() == i {
+        return current == wanted_solution;
     }
 
-    solution == wanted_solution
+    if wanted_solution > nums[i] && solvable(&nums, i + 1, wanted_solution, current + nums[i]) {
+        return true;
+    }
+
+    if solvable(&nums, i + 1, wanted_solution, current * nums[i]) {
+        return true;
+    }
+
+    false
 }
 
 #[aoc(day7, part2)]
@@ -56,68 +50,41 @@ pub fn part2(input: &str) -> u64 {
             .collect();
 
         // ToDo: schauen ob (plus bei allen ) größer als solution, dann keine solution
-        if solvable(&nums, 0, solution) {
+        if solvable2(&nums, 0, solution, 0) {
             sum += solution;
-            break;
         }
     }
 
     sum
 }
 
-pub fn solvable(nums: &Vec<u64>, i: usize, wanted_solution: u64) -> bool {
-    if nums.len()-1 == i {
-        return nums[i] == wanted_solution;
-    }
-
-    if solvable(&nums, i+1, wanted_solution - nums[i]) {
-        return true;
-    }
-
-    if solvable(&nums, i+1, wanted_solution / nums[i]) {
-        return true;
-    }
-
-    // || operator
-    let mut solution = wanted_solution - nums[0];
-    let zeros = (nums[0] as f64).log10() as u32;
-    let mut solution_zeros = 0;
-    while solution % 10 == 0 {
-        solution /= 10;
-        solution_zeros += 1;
-    }
-    if solution_zeros != zeros + 1 {
+pub fn solvable2(nums: &Vec<u64>, i: usize, wanted_solution: u64, current: u64) -> bool {
+    if current > wanted_solution {
         return false;
     }
-    if solvable(&nums, i, solution) {
+
+    if nums.len() == i {
+        return current == wanted_solution;
+    }
+
+    if solvable2(&nums, i + 1, wanted_solution, current + nums[i]) {
+        return true;
+    }
+
+    if solvable2(&nums, i + 1, wanted_solution, current * nums[i]) {
+        return true;
+    }
+
+    if solvable2(
+        &nums,
+        i + 1,
+        wanted_solution,
+        current *  (10_u64.pow((nums[i] as f64).log10() as u32 + 1)) + nums[i],
+    ) {
         return true;
     }
 
     false
-}
-
-pub fn correct2(nums: &Vec<u64>, mut operators: usize, wanted_solution: u64) -> bool {
-    let mut solution = nums[0];
-
-    for num in nums[1..].into_iter() {
-        match operators % 3 {
-            0 => solution *= num,
-            1 => solution += num,
-            2 => {
-                solution *= 10 * ((*num as f64).log10() as u64 + 1);
-                solution += num;
-            }
-            _ => panic!(),
-        }
-
-        if solution > wanted_solution {
-            return false;
-        }
-
-        operators /= 3;
-    }
-
-    solution == wanted_solution
 }
 
 #[cfg(test)]
@@ -165,6 +132,6 @@ mod tests {
             11387
         );
 
-        assert!(dbg!(part2(&fs::read_to_string("input/2024/day7.txt").expect(""))) > 6417120397561);
+        assert_eq!(part2(&fs::read_to_string("input/2024/day7.txt").expect("")), 61561126043536);
     }
 }
