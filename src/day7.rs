@@ -14,7 +14,6 @@ pub fn part1(input: &str) -> u64 {
             .collect();
 
         if solvable(&nums, 0, solution, 0) {
-            dbg!(solution);
             sum += solution;
         }
     }
@@ -23,11 +22,16 @@ pub fn part1(input: &str) -> u64 {
 }
 
 pub fn solvable(nums: &Vec<u64>, i: usize, wanted_solution: u64, current: u64) -> bool {
+
+    if current > wanted_solution {
+        return false;
+    }
+    
     if nums.len() == i {
         return current == wanted_solution;
     }
 
-    if wanted_solution > nums[i] && solvable(&nums, i + 1, wanted_solution, current + nums[i]) {
+    if solvable(&nums, i + 1, wanted_solution, current + nums[i]) {
         return true;
     }
 
