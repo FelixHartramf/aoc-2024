@@ -13,19 +13,13 @@ pub fn part1(input: &str) -> usize {
 
     let mut locations: Vec<(isize, isize)> = Vec::with_capacity(250);
 
-    for (y_i, line) in grid.iter().enumerate() {
-        for (x_i, c) in line.chars().enumerate() {
+    for (line, y) in grid.iter().zip(0..) {
+        for (c, x) in line.chars().zip(0..) {
             if c == '.' {
                 continue;
             }
-            if !beacons.contains_key(&c) {
-                beacons.insert(c, Vec::with_capacity(7));
-            }
 
-            let x = x_i as isize;
-            let y = y_i as isize;
-
-            for b in beacons.get(&c).unwrap() {
+            for b in beacons.entry(c).or_default() {
                 let dx = b.0 - x;
                 let dy = b.1 - y;
 
@@ -65,18 +59,13 @@ pub fn part2(input: &str) -> usize {
 
     let mut locations: Vec<(isize, isize)> = Vec::with_capacity(800);
 
-    for (y_i, line) in grid.iter().enumerate() {
-        for (x_i, c) in line.chars().enumerate() {
+    for (line, y) in grid.iter().zip(0..) {
+        for (c, x) in line.chars().zip(0..) {
             if c == '.' {
                 continue;
             }
-            if !beacons.contains_key(&c) {
-                beacons.insert(c, Vec::with_capacity(7));
-            }
-            let x = x_i as isize;
-            let y = y_i as isize;
 
-            for b in beacons.get(&c).unwrap() {
+            for b in beacons.entry(c).or_default() {
                 let dx = x - b.0;
                 let dy = y - b.1;
 
@@ -182,7 +171,7 @@ mod tests {
             34
         );
 
-        assert!(part2(&fs::read_to_string("input/2024/day8.txt").expect("")) > 228);
+        assert!(part2(&fs::read_to_string("input/2024/day8.txt").expect("")) > part1(&fs::read_to_string("input/2024/day8.txt").expect("")));
 
         assert_eq!(
             part2(&fs::read_to_string("input/2024/day8.txt").expect("")),
