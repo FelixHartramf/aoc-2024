@@ -13,8 +13,8 @@ pub fn part1(input: &str) -> usize {
 
     let mut locations: Vec<(isize, isize)> = Vec::with_capacity(250);
 
-    for (y, line) in grid.iter().enumerate() {
-        for (x, c) in line.chars().enumerate() {
+    for (y_i, line) in grid.iter().enumerate() {
+        for (x_i, c) in line.chars().enumerate() {
             if c == '.' {
                 continue;
             }
@@ -22,12 +22,15 @@ pub fn part1(input: &str) -> usize {
                 beacons.insert(c, Vec::with_capacity(7));
             }
 
-            for b in beacons.get(&c).unwrap() {
-                let dx = b.0 - x as isize;
-                let dy = b.1 - y as isize;
+            let x = x_i as isize;
+            let y = y_i as isize;
 
-                let x3 = x as isize - dx;
-                let y3 = y as isize - dy;
+            for b in beacons.get(&c).unwrap() {
+                let dx = b.0 - x;
+                let dy = b.1 - y;
+
+                let x3 = x - dx;
+                let y3 = y - dy;
 
                 let x4 = b.0 + dx;
                 let y4 = b.1 + dy;
@@ -41,7 +44,7 @@ pub fn part1(input: &str) -> usize {
                 }
             }
 
-            beacons.get_mut(&c).unwrap().push((x as isize, y as isize));
+            beacons.get_mut(&c).unwrap().push((x, y));
         }
     }
 
@@ -62,21 +65,23 @@ pub fn part2(input: &str) -> usize {
 
     let mut locations: Vec<(isize, isize)> = Vec::with_capacity(800);
 
-    for (y, line) in grid.iter().enumerate() {
-        for (x, c) in line.chars().enumerate() {
+    for (y_i, line) in grid.iter().enumerate() {
+        for (x_i, c) in line.chars().enumerate() {
             if c == '.' {
                 continue;
             }
             if !beacons.contains_key(&c) {
                 beacons.insert(c, Vec::with_capacity(7));
             }
+            let x = x_i as isize;
+            let y = y_i as isize;
 
             for b in beacons.get(&c).unwrap() {
-                let dx = x as isize - b.0;
-                let dy = y as isize - b.1;
+                let dx = x - b.0;
+                let dy = y - b.1;
 
-                let mut last_x = x as isize;
-                let mut last_y = y as isize;
+                let mut last_x = x;
+                let mut last_y = y;
                 while last_x - dx >= 0
                     && last_x - dx < x_max
                     && last_y - dy >= 0
@@ -100,7 +105,7 @@ pub fn part2(input: &str) -> usize {
                 }
             }
 
-            beacons.get_mut(&c).unwrap().push((x as isize, y as isize));
+            beacons.get_mut(&c).unwrap().push((x, y));
         }
     }
 
