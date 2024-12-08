@@ -1,10 +1,10 @@
-use std::{collections::HashMap, usize};
+use std::{collections::{HashMap, HashSet}, usize};
 
 use aoc_runner_derive::aoc;
 
 #[aoc(day8, part1)]
 pub fn part1(input: &str) -> usize {
-    let mut beacons: HashMap<char, Vec<(isize, isize)>> = HashMap::new();
+    let mut beacons: HashMap<char, Vec<(isize, isize)>> = HashMap::with_capacity(50);
 
     let mut x_max = 0;
     let mut y_max = 0;
@@ -25,7 +25,7 @@ pub fn part1(input: &str) -> usize {
         }
     }
 
-    let mut locations: Vec<(isize, isize)> = vec![];
+    let mut locations: Vec<(isize, isize)> = Vec::with_capacity(250);
     for (_, beacons) in beacons.iter() {
         for b1 in beacons {
             for b2 in beacons {
@@ -60,7 +60,7 @@ pub fn part1(input: &str) -> usize {
 
 #[aoc(day8, part2)]
 pub fn part2(input: &str) -> usize {
-    let mut beacons: HashMap<char, Vec<(isize, isize)>> = HashMap::new();
+    let mut beacons: HashMap<char, Vec<(isize, isize)>> = HashMap::with_capacity(50);
 
     let mut x_max = 0;
     let mut y_max = 0;
@@ -82,7 +82,7 @@ pub fn part2(input: &str) -> usize {
         }
     }
 
-    let mut locations: Vec<(isize, isize)> = vec![];
+    let mut locations: HashSet<(isize, isize)> = HashSet::with_capacity(50);
     for (_, beacons) in beacons.iter() {
         for b1 in beacons {
             for b2 in beacons {
@@ -99,7 +99,7 @@ pub fn part2(input: &str) -> usize {
                     && b1.1 - (i * dy) >= 0
                     && b1.1 - (i * dy) < y_max
                 {
-                    locations.push((b1.0 - (i * dx), b1.1 - (i * dy)));
+                    locations.insert((b1.0 - (i * dx), b1.1 - (i * dy)));
                     i += 1;
                 }
 
@@ -109,15 +109,12 @@ pub fn part2(input: &str) -> usize {
                     && b2.1 + (i * dy) >= 0
                     && b2.1 + (i * dy) < y_max
                 {
-                    locations.push((b2.0 + (i * dx), b2.1 + (i * dy)));
+                    locations.insert((b2.0 + (i * dx), b2.1 + (i * dy)));
                     i += 1;
                 }
             }
         }
     }
-
-    locations.sort();
-    locations.dedup();
 
     locations.len()
 }
