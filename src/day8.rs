@@ -6,43 +6,34 @@ use aoc_runner_derive::aoc;
 pub fn part1(input: &str) -> usize {
     let mut beacons: HashMap<char, Vec<(isize, isize)>> = HashMap::with_capacity(50);
 
-    let mut x_max = 0;
-    let mut y_max = 0;
-    for (y, line) in input.lines().enumerate() {
-        y_max += 1;
-        if x_max == 0 {
-            x_max = line.len() as isize;
-        }
+    let grid = input.lines().collect::<Vec<&str>>();
+
+    let x_max = grid[0].len() as isize;
+    let y_max = grid.len() as isize;
+
+    let mut locations: Vec<(isize, isize)> = Vec::with_capacity(250);
+
+    for (y, line) in grid.iter().enumerate() {
+        
         for (x, c) in line.chars().enumerate() {
             if c == '.' {
                 continue;
             }
             if !beacons.contains_key(&c) {
-                beacons.insert(c, vec![]);
+                beacons.insert(c, Vec::with_capacity(7));
             }
 
-            beacons.get_mut(&c).unwrap().push((x as isize, y as isize));
-        }
-    }
+            for b in beacons.get(&c).unwrap(){
+                let dx =  b.0 - x as isize;
+                let dy = b.1 - y as isize;
 
-    let mut locations: Vec<(isize, isize)> = Vec::with_capacity(250);
-    for (_, beacons) in beacons.iter() {
-        for b1 in beacons {
-            for b2 in beacons {
-                if b1 == b2 {
-                    continue;
-                }
+                let x3 = x as isize- dx;
+                let y3 = y as isize - dy ;
 
-                let dx =  b2.0 - b1.0;
-                let dy = b2.1 - b1.1;
+                let x4 =  b.0 + dx;
+                let y4 = b.1 + dy;
 
-                let x3 = b1.0 - dx;
-                let y3 = b1.1 - dy;
-
-                let x4 =  b2.0 + dx;
-                let y4 = b2.1 + dy;
-
-                if x3 >= 0 && x3 < x_max && y3 >= 0 && y3 < y_max {
+                if x3 >= 0 && x3 < x_max && y3 >= 0 && y3 < y_max  {
                     locations.push((x3, y3));
                 }
 
@@ -50,8 +41,11 @@ pub fn part1(input: &str) -> usize {
                     locations.push((x4, y4));
                 }
             }
+
+            beacons.get_mut(&c).unwrap().push((x as isize, y as isize));
         }
     }
+
     locations.sort();
     locations.dedup();
 
@@ -139,7 +133,8 @@ mod tests {
 ........A...
 .........A..
 ............
-............"
+............
+"
             ),
             14
         );
@@ -163,7 +158,8 @@ mod tests {
 ..........
 ..........
 ..........
-.........."
+..........
+"
             ),
             9
         );
@@ -181,7 +177,8 @@ mod tests {
 ........A...
 .........A..
 ............
-............"
+............
+"
             ),
             34
         );
