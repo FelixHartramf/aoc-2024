@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, usize};
+use std::{collections::HashMap, usize};
 
 use aoc_runner_derive::aoc;
 
@@ -14,7 +14,6 @@ pub fn part1(input: &str) -> usize {
     let mut locations: Vec<(isize, isize)> = Vec::with_capacity(250);
 
     for (y, line) in grid.iter().enumerate() {
-        
         for (x, c) in line.chars().enumerate() {
             if c == '.' {
                 continue;
@@ -23,17 +22,17 @@ pub fn part1(input: &str) -> usize {
                 beacons.insert(c, Vec::with_capacity(7));
             }
 
-            for b in beacons.get(&c).unwrap(){
-                let dx =  b.0 - x as isize;
+            for b in beacons.get(&c).unwrap() {
+                let dx = b.0 - x as isize;
                 let dy = b.1 - y as isize;
 
-                let x3 = x as isize- dx;
-                let y3 = y as isize - dy ;
+                let x3 = x as isize - dx;
+                let y3 = y as isize - dy;
 
-                let x4 =  b.0 + dx;
+                let x4 = b.0 + dx;
                 let y4 = b.1 + dy;
 
-                if x3 >= 0 && x3 < x_max && y3 >= 0 && y3 < y_max  {
+                if x3 >= 0 && x3 < x_max && y3 >= 0 && y3 < y_max {
                     locations.push((x3, y3));
                 }
 
@@ -56,59 +55,57 @@ pub fn part1(input: &str) -> usize {
 pub fn part2(input: &str) -> usize {
     let mut beacons: HashMap<char, Vec<(isize, isize)>> = HashMap::with_capacity(50);
 
-    let mut x_max = 0;
-    let mut y_max = 0;
-    for (y, line) in input.lines().enumerate() {
-        y_max += 1;
-        if x_max == 0 {
-            x_max = line.len() as isize;
-        }
+    let grid = input.lines().collect::<Vec<&str>>();
+
+    let x_max = grid[0].len() as isize;
+    let y_max = grid.len() as isize;
+
+    let mut locations: Vec<(isize, isize)> = Vec::with_capacity(800);
+
+    for (y, line) in grid.iter().enumerate() {
         for (x, c) in line.chars().enumerate() {
             if c == '.' {
                 continue;
             }
-
             if !beacons.contains_key(&c) {
-                beacons.insert(c, vec![]);
+                beacons.insert(c, Vec::with_capacity(7));
+            }
+
+            for b in beacons.get(&c).unwrap() {
+                let dx = x as isize - b.0;
+                let dy = y as isize - b.1;
+
+                let mut last_x = x as isize;
+                let mut last_y = y as isize;
+                while last_x - dx >= 0
+                    && last_x - dx < x_max
+                    && last_y - dy >= 0
+                    && last_y - dy < y_max
+                {
+                    last_x -= dx;
+                    last_y -= dy;
+                    locations.push((last_x, last_y));
+                }
+
+                last_x = b.0;
+                last_y = b.1;
+                while last_x + dx >= 0
+                    && last_x + dx < x_max
+                    && last_y + dy >= 0
+                    && last_y + dy < y_max
+                {
+                    last_x += dx;
+                    last_y += dy;
+                    locations.push((last_x, last_y));
+                }
             }
 
             beacons.get_mut(&c).unwrap().push((x as isize, y as isize));
         }
     }
 
-    let mut locations: HashSet<(isize, isize)> = HashSet::with_capacity(50);
-    for (_, beacons) in beacons.iter() {
-        for b1 in beacons {
-            for b2 in beacons {
-                if b1 == b2 {
-                    continue;
-                }
-
-                let dx = b2.0 - b1.0;
-                let dy = b2.1 - b1.1;
-
-                let mut i = 0;
-                while b1.0 - (i * dx) >= 0
-                    && b1.0 - (i * dx) < x_max
-                    && b1.1 - (i * dy) >= 0
-                    && b1.1 - (i * dy) < y_max
-                {
-                    locations.insert((b1.0 - (i * dx), b1.1 - (i * dy)));
-                    i += 1;
-                }
-
-                i = 0;
-                while b2.0 + (i * dx) >= 0
-                    && b2.0 + (i * dx) < x_max
-                    && b2.1 + (i * dy) >= 0
-                    && b2.1 + (i * dy) < y_max
-                {
-                    locations.insert((b2.0 + (i * dx), b2.1 + (i * dy)));
-                    i += 1;
-                }
-            }
-        }
-    }
+    locations.sort();
+    locations.dedup();
 
     locations.len()
 }
@@ -133,8 +130,7 @@ mod tests {
 ........A...
 .........A..
 ............
-............
-"
+............"
             ),
             14
         );
@@ -158,8 +154,7 @@ mod tests {
 ..........
 ..........
 ..........
-..........
-"
+.........."
             ),
             9
         );
@@ -177,8 +172,7 @@ mod tests {
 ........A...
 .........A..
 ............
-............
-"
+............"
             ),
             34
         );
