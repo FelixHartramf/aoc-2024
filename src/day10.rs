@@ -1,11 +1,11 @@
 use aoc_runner_derive::aoc;
 
 #[aoc(day10, part1)]
-pub fn part1(input: &str) -> u64 {
-    let grid: Vec<Vec<u32>> = input
+pub fn part1(input: &str) -> usize {
+    let grid: Vec<Vec<usize>> = input
         .lines()
-        .map(|l| l.chars().map(|c| c as u32 - 48).collect::<Vec<u32>>())
-        .collect::<Vec<Vec<u32>>>();
+        .map(|l| l.chars().map(|c| c as usize - 48).collect::<Vec<usize>>())
+        .collect::<Vec<Vec<usize>>>();
 
     let mut trails = 0;
     for y in 0..grid.len() {
@@ -14,8 +14,8 @@ pub fn part1(input: &str) -> u64 {
                 continue;
             }
 
-            for xd in 0..11 {
-                for yd in 0..11 {
+            for xd in 0..9 {
+                for yd in 0..9 {
                     if x >= xd
                         && y >= yd
                         && grid[y - yd][x - xd] == 9
@@ -57,9 +57,13 @@ pub fn part1(input: &str) -> u64 {
     }
     trails
 }
-pub fn path(grid: &Vec<Vec<u32>>, x0: usize, y0: usize, x1: usize, y1: usize) -> bool {
+pub fn path(grid: &Vec<Vec<usize>>, x0: usize, y0: usize, x1: usize, y1: usize) -> bool {
     if x0 == x1 && y0 == y1 {
         return true;
+    }
+
+    if grid[y0][x0].abs_diff(grid[y1][x1]) < x0.abs_diff(x1) + y0.abs_diff(y1) {
+        return false;
     }
 
     if x0 > 0 && grid[y0][x0 - 1] == grid[y0][x0] + 1 && path(grid, x0 - 1, y0, x1, y1) {
