@@ -127,9 +127,6 @@ mod tests {
             ),
             2858
         );
-
-        assert!(part2(&fs::read_to_string("input/2024/day9.txt").expect("")) > 6358495490494);
-        assert!(part2(&fs::read_to_string("input/2024/day9.txt").expect("")) < 63584954904941);
         assert_eq!(part2(
             &fs::read_to_string("input/2024/day9.txt").expect("")
        ),
