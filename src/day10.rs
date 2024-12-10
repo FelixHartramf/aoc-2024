@@ -14,7 +14,6 @@ pub fn part1(input: &str) -> u64 {
                 continue;
             }
 
-            
             for xd in 0..11 {
                 for yd in 0..11 {
                     if x >= xd
@@ -88,57 +87,76 @@ pub fn path(grid: &Vec<Vec<u32>>, x0: usize, y0: usize, x1: usize, y1: usize) ->
 
 #[aoc(day10, part2)]
 pub fn part2(input: &str) -> u32 {
-    let grid: Vec<Vec<u32>> = input
+    let mut grid: Vec<Vec<(u32, u32)>> = input
         .lines()
-        .map(|l| l.chars().map(|c| c as u32 - 48).collect::<Vec<u32>>())
-        .collect::<Vec<Vec<u32>>>();
-    let mut grid_paths: Vec<Vec<u32>> = input
-        .lines()
-        .map(|l| l.chars().map(|_| 0).collect::<Vec<u32>>())
-        .collect::<Vec<Vec<u32>>>(); 
+        .map(|l| {
+            l.chars()
+                .map(|c| {
+                    (
+                        c as u32 - 48,
+                        match c {
+                            '9' => 1,
+                            _ => 0,
+                        },
+                    )
+                })
+                .collect::<Vec<(u32, u32)>>()
+        })
+        .collect::<Vec<Vec<(u32, u32)>>>();
 
-    for y in 0..grid.len() {
-        for x in 0..grid[0].len(){
-            if grid[y][x] == 9 {
-                grid_paths[y][x] = 1;
-            }
-        }
-    }
-    for i in (0..=8).rev(){
-        for y in 0..grid.len() {
-            for x in 0..grid[0].len(){
-                if grid[y][x] != i {
+    let width = grid[0].len();
+    let heigth = grid.len();
+
+    for i in (1..=8).rev() {
+        for y in 0..width {
+            for x in 0..heigth {
+                if grid[y][x].0 != i {
                     continue;
                 }
 
                 let mut paths_to_nine = 0;
 
-                if x>0 && grid[y][x-1] == i+1{
-                    paths_to_nine += grid_paths[y][x-1];
+                if x > 0 && grid[y][x - 1].0 == i + 1 {
+                    paths_to_nine += grid[y][x - 1].1;
                 }
-                if y>0 && grid[y-1][x] == i+1{
-                    paths_to_nine += grid_paths[y-1][x];
-                }
-
-                if  x+1 < grid[0].len() && grid[y][x+1] == i+1{
-                    paths_to_nine += grid_paths[y][x+1];
-                }
-                if y+1 < grid.len() && grid[y+1][x] == i+1{
-                    paths_to_nine += grid_paths[y+1][x];
+                if y > 0 && grid[y - 1][x].0 == i + 1 {
+                    paths_to_nine += grid[y - 1][x].1;
                 }
 
-                grid_paths[y][x] = paths_to_nine;
+                if x + 1 < heigth && grid[y][x + 1].0 == i + 1 {
+                    paths_to_nine += grid[y][x + 1].1;
+                }
+                if y + 1 < width && grid[y + 1][x].0 == i + 1 {
+                    paths_to_nine += grid[y + 1][x].1;
+                }
+
+                grid[y][x].1 = paths_to_nine;
             }
         }
     }
 
     let mut sum = 0;
-    for y in 0..grid.len() {
-        for x in 0..grid[0].len(){
-            if grid[y][x] == 0{
-                sum += grid_paths[y][x];
+    for y in 0..heigth {
+        for x in 0..width {
+            if grid[y][x].0 != 0 {
+                continue;
             }
-        }}
+
+            if x > 0 && grid[y][x - 1].0 == 1 {
+                sum += grid[y][x - 1].1;
+            }
+            if y > 0 && grid[y - 1][x].0 == 1 {
+                sum += grid[y - 1][x].1;
+            }
+
+            if x + 1 < heigth && grid[y][x + 1].0 == 1 {
+                sum += grid[y][x + 1].1;
+            }
+            if y + 1 < width && grid[y + 1][x].0 == 1 {
+                sum += grid[y + 1][x].1;
+            }
+        }
+    }
     sum
 }
 
@@ -163,7 +181,10 @@ mod tests {
             36
         );
 
-        assert_eq!(part1(&fs::read_to_string("input/2024/day10.txt").expect("")), 646);
+        assert_eq!(
+            part1(&fs::read_to_string("input/2024/day10.txt").expect("")),
+            646
+        );
     }
 
     #[test]
@@ -182,6 +203,9 @@ mod tests {
             81
         );
 
-        assert_eq!(part2(&fs::read_to_string("input/2024/day10.txt").expect("")),1494);
+        assert_eq!(
+            part2(&fs::read_to_string("input/2024/day10.txt").expect("")),
+            1494
+        );
     }
 }
