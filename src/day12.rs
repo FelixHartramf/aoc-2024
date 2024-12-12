@@ -165,7 +165,7 @@ pub fn get_sides(fields: &Vec<(usize, usize)>) -> usize {
         }
     }
 
-    let mut removed_fences: Vec<(Side, usize, usize)> = vec![];
+    let mut removed = 0;
 
     for i in 0..fences.len() {
         for k in 0..fences.len() {
@@ -177,19 +177,19 @@ pub fn get_sides(fields: &Vec<(usize, usize)>) -> usize {
                 && fences[i].1 == fences[k].1
                 && fences[i].2 == fences[k].2 + 1
             {
-                removed_fences.push(fences[k]);
+                removed += 1;
             }
 
             if (fences[i].0 == Side::Left || fences[i].0 == Side::Right)
                 && fences[i].2 == fences[k].2
                 && fences[i].1 == fences[k].1 + 1
             {
-                removed_fences.push(fences[k]);
+                removed += 1;
             }
         }
     }
 
-    fences.len() - removed_fences.len()
+    fences.len() - removed
 }
 
 #[cfg(test)]
