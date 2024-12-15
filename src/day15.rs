@@ -1,7 +1,5 @@
 use aoc_runner_derive::aoc;
 
-use std::{thread, time::Duration};
-
 #[aoc(day15, part1)]
 pub fn part1(input: &str) -> usize {
     let (grid_str, instructions) = input.split_once("\n\n").unwrap();
@@ -76,39 +74,44 @@ pub fn part1(input: &str) -> usize {
 pub fn part2(input: &str) -> usize {
     let (grid_str, instructions) = input.split_once("\n\n").unwrap();
 
-    let grid_temp: Vec<Vec<char>> = grid_str
-        .lines()
-        .map(|l| l.chars().collect::<Vec<char>>())
-        .collect();
+    let mut grid: Vec<Vec<char>> = vec![Vec::with_capacity(100)];
 
-    let mut grid: Vec<Vec<char>> = vec![];
+// ToDo: Move this to the grid parsing
+    let mut robot = (0, 0);
+    let mut x = 0;
+    let mut y = 0;
+    for c in grid_str.chars() {
 
-    for y in 0..grid_temp.len() {
-        grid.push(vec![]);
-        for x in 0..grid_temp[0].len() {
-            match grid_temp[y][x] {
-                '#' => {
-                    grid[y].push('#');
-                    grid[y].push('#');
-                }
-                'O' => {
-                    grid[y].push('[');
-                    grid[y].push(']');
-                }
-                '.' => {
-                    grid[y].push('.');
-                    grid[y].push('.');
-                }
-                '@' => {
-                    grid[y].push('@');
-                    grid[y].push('.');
-                }
-                _ => panic!(),
+        let l = grid.len() - 1;
+        match c {
+            '#' => {
+                grid[l].push('#');
+                grid[l].push('#');
             }
+            'O' => {
+                grid[l].push('[');
+                grid[l].push(']');
+            }
+            '.' => {
+                grid[l].push('.');
+                grid[l].push('.');
+            }
+            '@' => {
+                robot = (y,x);
+                grid[l].push('.');
+                grid[l].push('.');
+            }
+            '\n' => {
+                y += 1;
+                x = -2;
+                grid.push(Vec::with_capacity(100));
+            }
+            _ => panic!(),
         }
+        x+= 2;
     }
 
-    let mut robot = (0, 0);
+    
     for y in 0..grid.len() {
         for x in 0..grid[0].len() {
             if grid[y][x] == '@' {
@@ -119,19 +122,6 @@ pub fn part2(input: &str) -> usize {
     }
 
     for instruction in instructions.chars() {
-        for y in 0..grid.len() {
-            for x in 0..grid[0].len() {
-                if x == robot.1 as usize && y == robot.0 as usize {
-                    print!("@");
-                    continue;
-                }
-                print!("{}", grid[y][x]);
-            }
-            println!();
-        }
-        println!();
-        //thread::sleep(Duration::from_millis(1000));
-        println!("{}", instruction);
         let movement: (isize, isize) = match instruction {
             '<' => (0, -1),
             '>' => (0, 1),
@@ -141,61 +131,23 @@ pub fn part2(input: &str) -> usize {
         };
 
         if grid[(robot.0 + movement.0) as usize][(robot.1 + movement.1) as usize] == '.' {
-            print!(" want");
             robot.0 = robot.0 + movement.0;
             robot.1 = robot.1 + movement.1;
             continue;
         }
+
         // check for free space to move
         if !can_move(&mut grid, robot, movement) {
-            print!(" dont want");
             continue;
         }
-        print!(" want");
-        do_move(
-            &mut grid,
-            (robot.0 + movement.0, robot.1 + movement.1),
-            movement,
-        );
-        if movement.0 != 0 {
-            if grid[(robot.0 + movement.0) as usize][(robot.1 + movement.1) as usize] == '[' {
-                do_move(
-                    &mut grid,
-                    (robot.0 + movement.0, robot.1 + movement.1 + 1),
-                    movement,
-                );
-            } else {
-                do_move(
-                    &mut grid,
-                    (robot.0 + movement.0, robot.1 + movement.1 - 1),
-                    movement,
-                );
-            }
-        }
+        do_move(&mut grid, (robot.0, robot.1), movement);
 
         robot.0 = robot.0 + movement.0;
         robot.1 = robot.1 + movement.1;
 
-        if movement.0 != 0 {
-            if grid[robot.0 as usize][robot.1 as usize] == '[' {
-                grid[robot.0 as usize][robot.1 as usize + 1] = '.';
-            } else if grid[robot.0 as usize][robot.1 as usize] == ']' {
-                grid[robot.0 as usize][robot.1 as usize - 1] = '.';
-            }
-        }
         grid[robot.0 as usize][robot.1 as usize] = '.';
     }
-    for y in 0..grid.len() {
-        for x in 0..grid[0].len() {
-            if x == robot.1 as usize && y == robot.0 as usize {
-                print!("@");
-                continue;
-            }
-            print!("{}", grid[y][x]);
-        }
-        println!();
-    }
-    println!();
+
     let mut sum = 0;
     for y in 0..grid.len() {
         for x in 0..grid[0].len() {
@@ -206,67 +158,39 @@ pub fn part2(input: &str) -> usize {
     }
     sum
 }
-
 pub fn do_move(grid: &mut Vec<Vec<char>>, current: (isize, isize), movement: (isize, isize)) {
-    if grid[current.0 as usize][current.1 as usize] == '.' {
-        return;
-    }
-
-    if movement.0 == 0 {
-        do_move(grid, (current.0, current.1 + movement.1), movement);
-        grid[current.0 as usize][(current.1 + movement.1) as usize] =
-            grid[current.0 as usize][current.1 as usize];
-
-        grid[current.0 as usize][(current.1) as usize] = '.';
-        return;
-    }
-
-    if movement.1 == 0
-        && grid[(current.0 + movement.0) as usize][current.1 as usize]
-            == grid[current.0 as usize][current.1 as usize]
+    if movement.0 != 0
+        && (grid[(current.0 + movement.0) as usize][(current.1 + movement.1) as usize] == '['
+            || grid[(current.0 + movement.0) as usize][(current.1 + movement.1) as usize] == ']')
+        && grid[(current.0 + movement.0) as usize][(current.1 + movement.1) as usize]
+            != grid[current.0 as usize][current.1 as usize]
     {
-        do_move(grid, (current.0 + movement.0, current.1), movement);
-        grid[(current.0 + movement.0) as usize][current.1 as usize] =
-            grid[current.0 as usize][current.1 as usize];
-
-        grid[current.0 as usize][(current.1) as usize] = '.';
-        return;
+        if grid[(current.0 + movement.0) as usize][(current.1 + movement.1) as usize] == '[' {
+            do_move(
+                grid,
+                (current.0 + movement.0, current.1 + movement.1 + 1),
+                movement,
+            );
+        } else {
+            do_move(
+                grid,
+                (current.0 + movement.0, current.1 + movement.1 - 1),
+                movement,
+            );
+        }
     }
 
-    if movement.1 == 0 && grid[(current.0 + movement.0) as usize][current.1 as usize] == '[' {
-        do_move(grid, (current.0 + movement.0, current.1), movement);
-        do_move(grid, (current.0 + movement.0, current.1 + 1), movement);
-        grid[(current.0 + movement.0) as usize][current.1 as usize] =
-            grid[current.0 as usize][current.1 as usize];
-
-        grid[(current.0 + movement.0) as usize][current.1 as usize + 1] =
-            grid[current.0 as usize][current.1 as usize + 1];
-        grid[current.0 as usize][(current.1) as usize] = '.';
-
-        grid[current.0 as usize][(current.1 + 1) as usize] = '.';
-        return;
+    if grid[(current.0 + movement.0) as usize][(current.1 + movement.1) as usize] != '.' {
+        do_move(
+            grid,
+            (current.0 + movement.0, current.1 + movement.1),
+            movement,
+        );
     }
 
-    if movement.1 == 0 && grid[(current.0 + movement.0) as usize][current.1 as usize] == ']' {
-        do_move(grid, (current.0 + movement.0, current.1), movement);
-        do_move(grid, (current.0 + movement.0, current.1 - 1), movement);
-
-        grid[(current.0 + movement.0) as usize][current.1 as usize] =
-            grid[current.0 as usize][current.1 as usize];
-
-        grid[(current.0 + movement.0) as usize][current.1 as usize - 1] =
-            grid[current.0 as usize][current.1 as usize - 1];
-
-        grid[current.0 as usize][(current.1) as usize] = '.';
-
-        grid[current.0 as usize][(current.1 - 1) as usize] = '.';
-
-        return;
-    }
-
-    do_move(grid, (current.0 + movement.0, current.1), movement);
-    grid[(current.0 + movement.0) as usize][current.1 as usize] =
+    grid[(current.0 + movement.0) as usize][(current.1 + movement.1) as usize] =
         grid[current.0 as usize][current.1 as usize];
+    grid[current.0 as usize][current.1 as usize] = '.';
 }
 
 pub fn can_move(
@@ -408,6 +332,10 @@ vvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v
 v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^"
             ),
             9021
+        );
+        assert_eq!(
+            part2(&fs::read_to_string("input/2024/day15.txt").expect("")),
+            1521952
         );
     }
 }
