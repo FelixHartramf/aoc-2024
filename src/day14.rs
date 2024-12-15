@@ -1,8 +1,6 @@
 use aoc_runner_derive::aoc;
 use regex::Regex;
 
-use std::{thread, time::Duration};
-
 #[aoc(day14, part1)]
 pub fn part1(input: &str) -> i64 {
     let width = 101;
