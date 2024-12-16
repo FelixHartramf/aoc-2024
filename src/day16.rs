@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use aoc_runner_derive::aoc;
 
-use pathfinding::prelude::astar;
+use pathfinding::prelude::{astar, astar_bag_collect};
 
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Direction {
@@ -48,7 +48,7 @@ impl Reindeer {
                 if grid[self.y - 1][self.x] != '#' {
                     succ.push((Reindeer::new(self.y - 1, self.x, Direction::North), 1001));
                 }
-                
+
                 if self.direction == Direction::East && grid[self.y][self.x + 1] != '#' {
                     succ.push((Reindeer::new(self.y, self.x + 1, Direction::East), 1));
                 }
@@ -118,14 +118,9 @@ pub fn part2(input: &str) -> usize {
     let mut reindeer = (0, 0);
     let mut end = (0, 0);
 
-    let mut to_check: HashSet<(usize, usize)> = HashSet::new();
     // ToDo: integrate in grid parsing
     for y in 0..grid.len() {
         for x in 0..grid[y].len() {
-            if grid[y][x] == '#' {
-                continue;
-            }
-
             if grid[y][x] == 'S' {
                 reindeer = (y, x);
             }
@@ -133,79 +128,25 @@ pub fn part2(input: &str) -> usize {
             if grid[y][x] == 'E' {
                 end = (y, x);
             }
-
-            to_check.insert((y, x));
         }
     }
 
-    let best_solution = astar(
+    let mut uniq_tiles = HashSet::new();
+    for solution in astar_bag_collect(
         &Reindeer::new(reindeer.0, reindeer.1, Direction::East),
         |r| r.successors(&grid),
         |r| r.heuristic((end.0, end.1)),
         |r| r.finished((end.0, end.1)),
     )
-    .unwrap();
-
-    let mut sum = best_solution.0.len();
-    for r in best_solution.0 {
-        to_check.remove(&(r.y, r.x));
+    .unwrap()
+    .0
+    {
+        for r in solution {
+            uniq_tiles.insert((r.y, r.x));
+        }
     }
 
-    let best_path_score = best_solution.1;
-
-    while to_check.len() > 0 {
-        let y = to_check.iter().next().unwrap().0;
-        let x = to_check.iter().next().unwrap().1;
-
-        let to_solution = match astar(
-            &Reindeer::new(reindeer.0, reindeer.1, Direction::East),
-            |r| r.successors(&grid),
-            |r| r.heuristic((y, x)),
-            |r| r.finished((y, x)),
-        ) {
-            Some(s) => s,
-            None => {
-                to_check.remove(&(y, x));
-                continue;
-            }
-        };
-
-        if to_solution.1 > best_path_score {
-            to_check.remove(&(y, x));
-            continue;
-        }
-
-        let from_solution = match astar(
-            to_solution.0.last().unwrap(),
-            |r| r.successors(&grid),
-            |r| r.heuristic((end.0, end.1)),
-            |r| r.finished((end.0, end.1)),
-        ) {
-            Some(s) => s,
-            None => {
-                to_check.remove(&(y, x));
-                continue;
-            }
-        };
-
-        if to_solution.1 + from_solution.1 == best_path_score {
-            for r in to_solution.0 {
-                if to_check.remove(&(r.y, r.x)) {
-                    sum += 1;
-                }
-            }
-
-            for r in from_solution.0 {
-                if to_check.remove(&(r.y, r.x)) {
-                    sum += 1;
-                }
-            }
-        }
-
-        to_check.remove(&(y, x));
-    }
-
-    sum
+    uniq_tiles.len()
 }
 
 #[cfg(test)]
