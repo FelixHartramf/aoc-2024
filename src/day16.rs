@@ -20,20 +20,17 @@ struct Reindeer {
 }
 
 impl Reindeer {
-    fn new(y: usize, x: usize, dir: Direction) -> Self {
-        Self {
-            y: y,
-            x: x,
-            direction: dir,
-        }
+    fn new(y: usize, x: usize, direction: Direction) -> Self {
+        Self { y, x, direction }
     }
 
     fn heuristic(&self, goal: (usize, usize)) -> usize {
-        self.x.abs_diff(goal.0) + self.y.abs_diff(goal.1)
-    }
-
-    fn heuristic_part2(&self, goal: (usize, usize)) -> usize {
-        self.x.abs_diff(goal.0) + self.y.abs_diff(goal.1)
+        self.x.abs_diff(goal.0)
+            + self.y.abs_diff(goal.1)
+            + match self.x != goal.1 && self.y != goal.0 {
+                true => 1000,
+                false => 0,
+            }
     }
 
     fn finished(&self, finish: (usize, usize)) -> bool {
@@ -41,38 +38,44 @@ impl Reindeer {
     }
 
     fn successors(&self, grid: &Vec<Vec<char>>) -> Vec<(Reindeer, usize)> {
-        
-        let mut succ = match self.direction {
+        let mut succ = vec![];
+        match self.direction {
             Direction::East | Direction::West => {
-                vec![
-                    (Reindeer::new(self.y, self.x, Direction::South), 1000),
-                    (Reindeer::new(self.y, self.x, Direction::North), 1000),
-                ]
+                if grid[self.y + 1][self.x] != '#' {
+                    succ.push((Reindeer::new(self.y + 1, self.x, Direction::South), 1001));
+                }
+
+                if grid[self.y - 1][self.x] != '#' {
+                    succ.push((Reindeer::new(self.y - 1, self.x, Direction::North), 1001));
+                }
+                
+                if self.direction == Direction::East && grid[self.y][self.x + 1] != '#' {
+                    succ.push((Reindeer::new(self.y, self.x + 1, Direction::East), 1));
+                }
+
+                if self.direction == Direction::West && grid[self.y][self.x - 1] != '#' {
+                    succ.push((Reindeer::new(self.y, self.x - 1, Direction::West), 1));
+                }
             }
 
             Direction::North | Direction::South => {
-                vec![
-                    (Reindeer::new(self.y, self.x, Direction::East), 1000),
-                    (Reindeer::new(self.y, self.x, Direction::West), 1000),
-                ]
+                if grid[self.y][self.x + 1] != '#' {
+                    succ.push((Reindeer::new(self.y, self.x + 1, Direction::East), 1001));
+                }
+
+                if grid[self.y][self.x - 1] != '#' {
+                    succ.push((Reindeer::new(self.y, self.x - 1, Direction::West), 1001));
+                }
+
+                if self.direction == Direction::South && grid[self.y + 1][self.x] != '#' {
+                    succ.push((Reindeer::new(self.y + 1, self.x, Direction::South), 1));
+                }
+
+                if self.direction == Direction::North && grid[self.y - 1][self.x] != '#' {
+                    succ.push((Reindeer::new(self.y - 1, self.x, Direction::North), 1));
+                }
             }
         };
-
-        if self.direction == Direction::East && grid[self.y][self.x + 1] != '#' {
-            succ.push((Reindeer::new(self.y, self.x + 1, Direction::East), 1));
-        }
-
-        if self.direction == Direction::West && grid[self.y][self.x - 1] != '#' {
-            succ.push((Reindeer::new(self.y, self.x - 1, Direction::West), 1));
-        }
-
-        if self.direction == Direction::South && grid[self.y + 1][self.x] != '#' {
-            succ.push((Reindeer::new(self.y + 1, self.x, Direction::South), 1));
-        }
-
-        if self.direction == Direction::North && grid[self.y - 1][self.x] != '#' {
-            succ.push((Reindeer::new(self.y - 1, self.x, Direction::North), 1));
-        }
 
         succ
     }
@@ -123,7 +126,6 @@ pub fn part2(input: &str) -> usize {
                 continue;
             }
 
-            
             if grid[y][x] == 'S' {
                 reindeer = (y, x);
             }
@@ -131,73 +133,73 @@ pub fn part2(input: &str) -> usize {
             if grid[y][x] == 'E' {
                 end = (y, x);
             }
-            
+
             to_check.insert((y, x));
         }
     }
 
-    let best_meow = astar(
+    let best_solution = astar(
         &Reindeer::new(reindeer.0, reindeer.1, Direction::East),
         |r| r.successors(&grid),
         |r| r.heuristic((end.0, end.1)),
         |r| r.finished((end.0, end.1)),
     )
     .unwrap();
-    let mut sum = 0;
-    for r in best_meow.0 {
-        if to_check.contains(&(r.y, r.x)) {
-            sum += 1;
-            to_check.remove(&(r.y, r.x));
-        }
+
+    let mut sum = best_solution.0.len();
+    for r in best_solution.0 {
+        to_check.remove(&(r.y, r.x));
     }
 
-    let best = best_meow.1;
+    let best_path_score = best_solution.1;
 
     while to_check.len() > 0 {
-        dbg!(to_check.len());
         let y = to_check.iter().next().unwrap().0;
         let x = to_check.iter().next().unwrap().1;
 
-        let to_solution_meow = astar(
+        let to_solution = match astar(
             &Reindeer::new(reindeer.0, reindeer.1, Direction::East),
             |r| r.successors(&grid),
             |r| r.heuristic((y, x)),
             |r| r.finished((y, x)),
-        );
-        if to_solution_meow == None {
+        ) {
+            Some(s) => s,
+            None => {
+                to_check.remove(&(y, x));
+                continue;
+            }
+        };
+
+        if to_solution.1 > best_path_score {
             to_check.remove(&(y, x));
+            continue;
         }
 
-        let to_solution = to_solution_meow.unwrap();
-        let to = to_solution.1;
-
-        if to > best + 1 {
-            to_check.remove(&(y, x));
-        }
-
-        let from = astar(
+        let from_solution = match astar(
             to_solution.0.last().unwrap(),
             |r| r.successors(&grid),
             |r| r.heuristic((end.0, end.1)),
             |r| r.finished((end.0, end.1)),
-        )
-        .unwrap();
+        ) {
+            Some(s) => s,
+            None => {
+                to_check.remove(&(y, x));
+                continue;
+            }
+        };
 
-        if to + from.1 == best {
+        if to_solution.1 + from_solution.1 == best_path_score {
             for r in to_solution.0 {
-                if to_check.contains(&(r.y, r.x)) {
-                    to_check.remove(&(r.y, r.x));
+                if to_check.remove(&(r.y, r.x)) {
                     sum += 1;
                 }
             }
 
-            for r in from.0 {
-                if to_check.contains(&(r.y, r.x)) {
-                    to_check.remove(&(r.y, r.x));
+            for r in from_solution.0 {
+                if to_check.remove(&(r.y, r.x)) {
                     sum += 1;
                 }
             }
-
         }
 
         to_check.remove(&(y, x));
