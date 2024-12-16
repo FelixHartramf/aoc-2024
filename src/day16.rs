@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use aoc_runner_derive::aoc;
 
 use pathfinding::prelude::astar;
@@ -30,14 +32,16 @@ impl Reindeer {
         self.x.abs_diff(goal.0) + self.y.abs_diff(goal.1)
     }
 
+    fn heuristic_part2(&self, goal: (usize, usize)) -> usize {
+        self.x.abs_diff(goal.0) + self.y.abs_diff(goal.1)
+    }
+
     fn finished(&self, finish: (usize, usize)) -> bool {
         self.y == finish.0 && self.x == finish.1
     }
 
     fn successors(&self, grid: &Vec<Vec<char>>) -> Vec<(Reindeer, usize)> {
         
-
-
         let mut succ = match self.direction {
             Direction::East | Direction::West => {
                 vec![
@@ -80,7 +84,7 @@ pub fn part1(input: &str) -> usize {
 
     let mut reindeer = (0, 0);
     let mut end = (0, 0);
-    
+
     // ToDo: integrate in grid parsing
     for y in 0..grid.len() {
         for x in 0..grid[y].len() {
@@ -99,7 +103,9 @@ pub fn part1(input: &str) -> usize {
         |r| r.successors(&grid),
         |r| r.heuristic((end.0, end.1)),
         |r| r.finished((end.0, end.1)),
-    ).unwrap().1
+    )
+    .unwrap()
+    .1
 }
 
 #[aoc(day16, part2)]
@@ -108,10 +114,16 @@ pub fn part2(input: &str) -> usize {
 
     let mut reindeer = (0, 0);
     let mut end = (0, 0);
-    
+
+    let mut to_check: HashSet<(usize, usize)> = HashSet::new();
     // ToDo: integrate in grid parsing
     for y in 0..grid.len() {
         for x in 0..grid[y].len() {
+            if grid[y][x] == '#' {
+                continue;
+            }
+
+            
             if grid[y][x] == 'S' {
                 reindeer = (y, x);
             }
@@ -119,52 +131,76 @@ pub fn part2(input: &str) -> usize {
             if grid[y][x] == 'E' {
                 end = (y, x);
             }
+            
+            to_check.insert((y, x));
         }
     }
 
-    let best = astar(
+    let best_meow = astar(
         &Reindeer::new(reindeer.0, reindeer.1, Direction::East),
         |r| r.successors(&grid),
         |r| r.heuristic((end.0, end.1)),
         |r| r.finished((end.0, end.1)),
-    ).unwrap().1;
-
+    )
+    .unwrap();
     let mut sum = 0;
-
-    for y in 0..grid.len() {
-        for x in 0..grid[y].len() {
-            if grid[y][x] == '#' {
-                continue;
-            }
-
-            let to_solution_meow = astar(
-                &Reindeer::new(reindeer.0, reindeer.1, Direction::East),
-                |r| r.successors(&grid),
-                |r| r.heuristic((y, x)),
-                |r| r.finished((y, x)),
-            );
-            if to_solution_meow == None {
-                continue;
-            }
-
-            let to_solution = to_solution_meow.unwrap();
-            let to = to_solution.1;
-
-            if to > best+1 {
-                continue;
-            }
-
-            let from = astar(
-                dbg!(to_solution.0.last().unwrap()),
-                |r| r.successors(&grid),
-                |r| r.heuristic((end.0, end.1)),
-                |r| r.finished((end.0, end.1)),
-            ).unwrap().1;
-
-            if to+from == best {
-                sum += 1;
-            }
+    for r in best_meow.0 {
+        if to_check.contains(&(r.y, r.x)) {
+            sum += 1;
+            to_check.remove(&(r.y, r.x));
         }
+    }
+
+    let best = best_meow.1;
+
+    while to_check.len() > 0 {
+        dbg!(to_check.len());
+        let y = to_check.iter().next().unwrap().0;
+        let x = to_check.iter().next().unwrap().1;
+
+        let to_solution_meow = astar(
+            &Reindeer::new(reindeer.0, reindeer.1, Direction::East),
+            |r| r.successors(&grid),
+            |r| r.heuristic((y, x)),
+            |r| r.finished((y, x)),
+        );
+        if to_solution_meow == None {
+            to_check.remove(&(y, x));
+        }
+
+        let to_solution = to_solution_meow.unwrap();
+        let to = to_solution.1;
+
+        if to > best + 1 {
+            to_check.remove(&(y, x));
+        }
+
+        let from = astar(
+            to_solution.0.last().unwrap(),
+            |r| r.successors(&grid),
+            |r| r.heuristic((end.0, end.1)),
+            |r| r.finished((end.0, end.1)),
+        )
+        .unwrap();
+
+        if to + from.1 == best {
+            for r in to_solution.0 {
+                if to_check.contains(&(r.y, r.x)) {
+                    to_check.remove(&(r.y, r.x));
+                    sum += 1;
+                }
+            }
+
+            for r in from.0 {
+                if to_check.contains(&(r.y, r.x)) {
+                    to_check.remove(&(r.y, r.x));
+                    sum += 1;
+                }
+            }
+
+        }
+
+        to_check.remove(&(y, x));
     }
 
     sum
@@ -221,7 +257,10 @@ mod tests {
             ),
             11048
         );
-        assert_eq!(part1(&fs::read_to_string("input/2024/day16.txt").expect("")), 107468);
+        assert_eq!(
+            part1(&fs::read_to_string("input/2024/day16.txt").expect("")),
+            107468
+        );
     }
 
     #[test]
@@ -269,6 +308,9 @@ mod tests {
             ),
             64
         );
-        assert_eq!(part2(&fs::read_to_string("input/2024/day16.txt").expect("")), 533);
+        assert_eq!(
+            part2(&fs::read_to_string("input/2024/day16.txt").expect("")),
+            533
+        );
     }
 }
