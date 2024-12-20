@@ -131,7 +131,7 @@ pub fn part2(input: &str) -> usize {
         }
     }
 
-    let mut uniq_tiles = HashSet::new();
+    let mut uniq_tiles = HashSet::with_capacity(550);
     for solution in astar_bag_collect(
         &Reindeer::new(reindeer.0, reindeer.1, Direction::East),
         |r| r.successors(&grid),
