@@ -97,49 +97,47 @@ pub fn part1(input: &str) -> usize {
 
 #[aoc(day20, part2)]
 pub fn part2(input: &str) -> usize {
-    let grid_c: Vec<Vec<char>> = input.lines().map(|l| l.chars().collect()).collect();
-    let mut grid: Vec<Vec<isize>> = Vec::with_capacity(grid_c.len());
+    let mut grid: Vec<Vec<char>> = input.lines().map(|l| l.chars().collect()).collect();
 
     let mut start = (0, 0);
     let mut end = (0, 0);
 
     // ToDo: integrate in grid parsing
-    for y in 0..grid_c.len() {
-        grid.push(Vec::with_capacity(grid_c[y].len()));
-        for x in 0..grid_c[y].len() {
-            match grid_c[y][x] {
+    for y in 0..grid.len() {
+        for x in 0..grid[y].len() {
+            match grid[y][x] {
                 'S' => {
-                    grid[y].push(1);
                     start = (y, x);
+                    grid[y][x] = '.';
                 }
                 'E' => {
                     end = (y, x);
-                    grid[y].push(0);
+                    grid[y][x] = '.';
                 }
-                '#' => grid[y].push(-1),
-                '.' => grid[y].push(0),
-                _ => panic!(),
+                _ => {}
             }
         }
     }
 
     let mut current_pos = start;
-    let mut current_index = 1;
 
     let mut path: Vec<(usize, usize)> = vec![start];
     while current_pos != end {
-        current_index += 1;
-        if grid[current_pos.0 - 1][current_pos.1] == 0 {
-            grid[current_pos.0 - 1][current_pos.1] = current_index;
+        if grid[current_pos.0 - 1][current_pos.1] == '.'
+            && (path.len() == 1 ||path[path.len()-2] != (current_pos.0 - 1, current_pos.1))
+        {
             current_pos.0 -= 1;
-        } else if grid[current_pos.0 + 1][current_pos.1] == 0 {
-            grid[current_pos.0 + 1][current_pos.1] = current_index;
+        } else if grid[current_pos.0 + 1][current_pos.1] == '.'
+            && (path.len() == 1 ||path[path.len()-2] != (current_pos.0 + 1, current_pos.1))
+        {
             current_pos.0 += 1;
-        } else if grid[current_pos.0][current_pos.1 - 1] == 0 {
-            grid[current_pos.0][current_pos.1 - 1] = current_index;
+        } else if grid[current_pos.0][current_pos.1 - 1] == '.'
+            && (path.len() == 1 ||path[path.len()-2] != (current_pos.0, current_pos.1 - 1))
+        {
             current_pos.1 -= 1;
-        } else if grid[current_pos.0][current_pos.1 + 1] == 0 {
-            grid[current_pos.0][current_pos.1 + 1] = current_index;
+        } else if grid[current_pos.0][current_pos.1 + 1] == '.'
+            && (path.len() == 1 || path[path.len()-2] != (current_pos.0, current_pos.1 + 1))
+        {
             current_pos.1 += 1;
         }
         path.push(current_pos);
@@ -149,15 +147,19 @@ pub fn part2(input: &str) -> usize {
     let cheats = 20;
     let number = 100;
 
-    for (i, tile) in path.iter().enumerate() {
-        for tile2 in path[i ..].iter() {
-            if grid[tile.0][tile.1].abs_diff(grid[tile2.0][tile2.1]) < number + tile.0.abs_diff(tile2.0) + tile.1.abs_diff(tile2.1)
-            {
-                continue;
-            }
+    for (i, tile) in path[..path.len()-number].iter().enumerate() {
+        for (i2, tile2) in path[i+number+1..].iter().enumerate() {
+            // Skip if too many cheats would be used
             if tile.0.abs_diff(tile2.0) + tile.1.abs_diff(tile2.1) > cheats {
                 continue;
             }
+            
+            if  tile.0.abs_diff(tile2.0) + tile.1.abs_diff(tile2.1) >= i2+2{
+                //dbg!(tile, tile2, i, i2);
+                continue;
+            }
+
+            
             above_100 += 1;
         }
     }
@@ -201,10 +203,9 @@ mod tests {
 
     #[test]
     fn part2_test() {
-        
         assert_eq!(
-            part2(&fs::read_to_string("input/2024/day20.txt").expect("")), 1033983
+            part2(&fs::read_to_string("input/2024/day20.txt").expect("")),
+            1033983
         );
-        
     }
 }
