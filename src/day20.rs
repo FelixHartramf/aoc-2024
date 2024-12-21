@@ -154,8 +154,8 @@ pub fn part2(input: &str) -> usize {
                 continue;
             }
             
+            // After some optimisations this stayed till the end
             if  tile.0.abs_diff(tile2.0) + tile.1.abs_diff(tile2.1) >= i2+2{
-                //dbg!(tile, tile2, i, i2);
                 continue;
             }
 
